@@ -4,7 +4,7 @@ import time
 def speech_recognize_continuous_from_file(file):
     """performs continuous speech recognition with input from an audio file"""
     # <SpeechContinuousRecognitionWithFile>
-    speech_config = speechsdk.SpeechConfig(subscription="75ea7877e1ac405aac11036d4fe62f37", region="eastus")
+    speech_config = speechsdk.SpeechConfig(subscription="****", region="eastus")
     audio_config = speechsdk.audio.AudioConfig(filename=file)
 
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
