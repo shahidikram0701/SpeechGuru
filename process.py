@@ -3,8 +3,9 @@ import time
 # import process_sentences
 from collections import defaultdict
 from nltk.tokenize import word_tokenize, sent_tokenize
+import matplotlib.pyplot as plt
 
-debug = True
+debug = False
 
 def debug_print(*args):
     if(debug):
@@ -62,7 +63,7 @@ def process_sentences_filler_words_and_profanity(text):
     filler_words_detected = []
     for i in profanity:
         if i in word_counts_text:
-            profanity_words_detected.append(i)
+            profanity_words_detected.append({i: word_counts_text[i]})
 
     for i in filler_words:
         if(i in word_counts_text):
@@ -205,12 +206,15 @@ debug_print("profanity_words_detected: ", profanity_words_detected)
 
 
 def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detected):
-    feedback_message = ""
-    feedback_message = {
+    global word_counts_text
+    feedback_message = "_" * 100
+    feedback_message += "\n\n A detailed report I could come up with listening to you speak! Hope I can be of any help :) \n\n"
+    feedback_message += "Lets start with analysis of the tone with which you were speaking!\n\n"
+    tone_feedback_message = {
         "paras": {
             -1: "It appears that the deliberate long pauses between the different paragraphs could be something we could improve upon.",
             0: "Spot on with the deliberate long pauses between the different paragraphs.",
-            1: "Oopsie, Seems like there were quite a few extra long pauses you had right there. Maybe we could improve upon exerting those long pauses as approproate, and not overdoing it :)"
+            1: "Oopsie, Seems like there were quite a few extra long pauses you had right there. Maybe we could improve upon exerting those long pauses as approproate, and not overdoing it. :)"
         },
         "sentences": {
             -1: "Oops, May be we hurried up a bit there. Felt like some sentences couldn't be distiguished from the other. If we could work upon those tiny little pauses to be able to differentiate sentences, may be the audience could connect better. You know what I am saying yeah?",
@@ -228,14 +232,52 @@ def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detect
             1: "Ooh! That was a high energy exciting talk.",
         },
         "commas": {
-            -1: "We could probably work on those soft pauses during a sentence",
+            -1: "We could probably work on those soft pauses during a sentence.",
             0: "That right there was perfection. The soft pauses during the sentences capturing the attention of the audience done graciously. Job Well done!!",
             1: "Aah, Seemed like we had one too many soft pauses in a sentence right there. Let us work on getting them right! What say?" 
         }
     }
-    feedback_message += feedback_message[tone_feedback["paras"]] + "\n" + feedback_message[tone_feedback["sentences"]] + "\n" + feedback_message[tone_feedback["questions"]] + "\n" + feedback_message[tone_feedback["exclamation"]] + "\n" + feedback_message[tone_feedback["commas"]] + "\n";
+    feedback_message += "\t1. "+ tone_feedback_message["paras"][tone_feedback["paras"]] + "\n\t2. " + tone_feedback_message["sentences"][tone_feedback["sentences"]] + "\n\t3. " + tone_feedback_message["questions"][tone_feedback["questions"]] + "\n\t4. " + tone_feedback_message["exclamation"][tone_feedback["exclamation"]] + "\n\t5. " + tone_feedback_message["commas"][tone_feedback["commas"]]
+
+    if(len(filler_words_detected) > 0):
+        filler_words_detected.sort(key=lambda x: list(x.values())[0], reverse=True)
+        feedback_message += "\n\nFiller Words details: \n" + "Your top 5 most used filler words are: \n"
+        for i in range(min(5, len(filler_words_detected))):
+            item = list(filler_words_detected[i].items())[0]
+            feedback_message += "\t" + str(i+1) + ". "+ "'" + item[0] + "'" + " used " + str(item[1]) + " times\n"
+
+        total_words_spoken = sum(list(word_counts_text.values()))
+        # total_filler_words_spoken = sum([i for i in list(filler_words_detected[i].values())[0]])
+        total_filler_words_spoken = sum(list(map(lambda x: list(x.values())[0], filler_words_detected)))
+
+        percentage_filler_words = (total_filler_words_spoken / total_words_spoken) * 100
+
+        feedback_message += "\nOkay we have another interesting insight that might help you. Looks like your speech contains {:.2f}% of filler words! Hope this helps you improve refining your talk :)".format(percentage_filler_words)
+
+    if(len(profanity_words_detected) > 0):
+        feedback_message += "\n\nDid you just say that?! :O\n\nLooks like I heard some words there that might well qualify to go behind a beep! Ooopppss!\n"
+        feedback_message += "Words that you might have uttered unconciosly that would probably need a little reconsideration, if appropriate to be used whilst talking to an audience as I could point out would be:\n"
+        profanity_words_detected.sort(key=lambda x: list(x.values())[0], reverse=True)
+        for i in range(len(profanity_words_detected)):
+            item = list(profanity_words_detected[i].items())[0]
+            feedback_message += "\t" + str(i+1) + ". " + "'" + item[0] + "'" + " used " + str(item[1]) + " times\n"
+
+        feedback_message += "\nI think it would be wonderful if we could reduce the usage of these words as if would create a sense of uncomforatability for certain people in the audience! It wont hurt to come clean every once in a while...Will it now?! :P\n\n"
+
+    feedback_message += "_" * 100
+
+    return feedback_message
+
+
+feedback_report = generateFeeback(tone_feedback, filler_words_detected, profanity_words_detected)
+print(feedback_report)
+
+
+
     
-     
+
+
+
 
 
         
