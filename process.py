@@ -241,7 +241,7 @@ def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detect
 
     if(len(filler_words_detected) > 0):
         filler_words_detected.sort(key=lambda x: list(x.values())[0], reverse=True)
-        feedback_message += "\n\nFiller Words details: \n" + "Your top 5 most used filler words are: \n"
+        feedback_message += "\n\nFiller Words details: \n" + "Your most used filler words are: \n"
         for i in range(min(5, len(filler_words_detected))):
             item = list(filler_words_detected[i].items())[0]
             feedback_message += "\t" + str(i+1) + ". "+ "'" + item[0] + "'" + " used " + str(item[1]) + " times\n"
