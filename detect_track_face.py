@@ -17,15 +17,28 @@ faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 OUTPUT_SIZE_WIDTH = 775
 OUTPUT_SIZE_HEIGHT = 600
 
+MOTION_THRESHOLD = 2
+FACE_THRESHOLD = 5
 
 start = -1
+motion_start = -1
+previous_center = -1
+
+should_move = False
 
 def detectAndTrackLargestFace():
+    global start
+    global motion_start
+    global previous_center
+    global move_message_x
+    global move_message_y
+    global should_move
+
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter('output.avi', fourcc, 30.0, (320,240))
 
     #Open the first webcame device
-    capture = cv2.VideoCapture("temp_video.avi")
+    capture = cv2.VideoCapture(0)
 
     #Create two opencv named windows
     cv2.namedWindow("base-image", cv2.WINDOW_AUTOSIZE)
@@ -152,10 +165,31 @@ def detectAndTrackLargestFace():
                         t_y = int(tracked_position.top())
                         t_w = int(tracked_position.width())
                         t_h = int(tracked_position.height())
-                        cv2.rectangle(resultImage, (t_x, t_y),
-                                                    (t_x + t_w , t_y + t_h),
-                                                    rectangleColor ,2)
+                        # cv2.rectangle(resultImage, (t_x, t_y),
+                        #                             (t_x + t_w , t_y + t_h),
+                        #                             rectangleColor ,2)
+                        
                         start = -1
+                        current_center = t_x + t_w / 2
+                        if(motion_start == -1):
+                            previous_center = current_center
+                            motion_start = time.time()
+                        
+                        elif(time.time() - motion_start >= MOTION_THRESHOLD):
+                            if(abs(current_center - previous_center) <= 60):
+                                should_move = True
+                                overlay2 = resultImage.copy()
+                                cv2.putText(overlay2, "Try Moving!", (t_x - t_w // 2, t_y - 10), cv2.FONT_HERSHEY_DUPLEX, 0.85, (255, 0, 0), 2, 1) 
+                                cv2.addWeighted(overlay2, 0.5, resultImage, 1 - 0.5, 0, resultImage)
+                            else:
+                                previous_center = current_center
+                                motion_start = time.time()
+                                should_move = False
+                                # debug_print("*" * 100)
+
+                       
+
+
                         # debug_print("( x, y, w, h ) => ( " + str(t_x) + ", " + str(t_y) + ", " + str(t_w) + ", " + str(t_h) + " )" )
 
                     else:
@@ -180,28 +214,36 @@ def detectAndTrackLargestFace():
                 #at the right coordinates.
                 largeResult = cv2.resize(resultImage,
                                         (OUTPUT_SIZE_WIDTH,OUTPUT_SIZE_HEIGHT))
+                # largeResult = resultImage
                 if(trackingFace == 0):
+                    motion_start = -1
+                    should_move = False
                     if(start == -1):
                         start = time.time()
                     overlay = largeResult.copy()
                     cv2.rectangle(overlay, (0, 0), (OUTPUT_SIZE_WIDTH, OUTPUT_SIZE_WIDTH), (0, 0, 255), -1)
                     cv2.addWeighted(overlay, 0.2, largeResult, 1 - 0.2, 0, largeResult)
 
-                    if(start != -1 and time.time() - start >= 2):
+                    if(start != -1 and time.time() - start >= FACE_THRESHOLD):
                         overlay2 = largeResult.copy()
-                        cv2.putText(overlay2, "Face the audience!", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3) 
+                        cv2.putText(overlay2, "Face the audience!", (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3) 
                         cv2.addWeighted(overlay2, 0.5, largeResult, 1 - 0.5, 0, largeResult)
                         
-                        debug_print("Looking away")     
+                        # debug_print("Looking away")     
                     
                     
-                
+                else:
+                    if(should_move):
+                        overlay = largeResult.copy()
+                        cv2.rectangle(overlay, (0, 0), (OUTPUT_SIZE_WIDTH, OUTPUT_SIZE_WIDTH), (255, 0, 0), -1)
+                        cv2.addWeighted(overlay, 0.2, largeResult, 1 - 0.2, 0, largeResult) 
+                        
 
                 #Finally, we want to show the images on the screen
                 cv2.imshow("base-image", baseImage)
                 cv2.imshow("result-image", largeResult)
                 out.write(largeResult)
-                cv2.waitKey(10)
+                cv2.waitKey(15)
 
             else:
                 break
