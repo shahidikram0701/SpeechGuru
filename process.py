@@ -4,6 +4,7 @@ import time
 from collections import defaultdict
 from nltk.tokenize import word_tokenize, sent_tokenize
 import matplotlib.pyplot as plt
+mysp=__import__("my-voice-analysis")
 
 debug = False
 
@@ -173,20 +174,19 @@ def process_tone(text):
         feedback["commas"] = 0
 
     return feedback
-# text = speech_recognize_continuous_from_file("temp_audio.wav")
-# debug_print("Text Transcribed from Speech Service")
-# debug_print("*" * 100)
-# debug_print("transcribed Text: ", text)
-# with open("transcribed_text.txt", "w") as file:
-#     file.write(text)
-# debug_print("*" * 100)
-# debug_print("\n" * 5)
-# response = process_sentences(text)
-# debug_print("Processed Sentence [word: count]\n", [(key, response[key]) for key in response])
+
+text = speech_recognize_continuous_from_file("temp_audio.wav")
+debug_print("Text Transcribed from Speech Service")
+debug_print("*" * 100)
+debug_print("transcribed Text: ", text)
+with open("transcribed_text.txt", "w") as file:
+    file.write(text)
+debug_print("*" * 100)
+debug_print("\n" * 5)
 
 
-with open("transcribed_text.txt", "r") as file:
-    text = file.read()
+# # with open("transcribed_text.txt", "r") as file:
+# #     text = file.read()
 
 text = text.lower()
 tokens_text = word_tokenize(text)
@@ -194,7 +194,7 @@ word_counts_text = {}
 word_counts_text = word_counts_text.fromkeys(tokens_text)
 for i in word_counts_text:
     word_counts_text[i] = tokens_text.count(i)
-# debug_print("word_counts_text: ", word_counts_text)
+debug_print("word_counts_text: ", word_counts_text)
 
 tone_feedback = process_tone(text)
 debug_print("feedback: ", tone_feedback)
@@ -237,11 +237,11 @@ def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detect
             1: "Aah, Seemed like we had one too many soft pauses in a sentence right there. Let us work on getting them right! What say?" 
         }
     }
-    feedback_message += "\t1. "+ tone_feedback_message["paras"][tone_feedback["paras"]] + "\n\t2. " + tone_feedback_message["sentences"][tone_feedback["sentences"]] + "\n\t3. " + tone_feedback_message["questions"][tone_feedback["questions"]] + "\n\t4. " + tone_feedback_message["exclamation"][tone_feedback["exclamation"]] + "\n\t5. " + tone_feedback_message["commas"][tone_feedback["commas"]]
+    feedback_message += "\t1. "+ tone_feedback_message["paras"][tone_feedback["paras"]] + "\n\t2. " + tone_feedback_message["sentences"][tone_feedback["sentences"]] + "\n\t3. " + tone_feedback_message["questions"][tone_feedback["questions"]] + "\n\t4. " + tone_feedback_message["exclamation"][tone_feedback["exclamation"]] + "\n\t5. " + tone_feedback_message["commas"][tone_feedback["commas"]] + "\n\n"
 
     if(len(filler_words_detected) > 0):
         filler_words_detected.sort(key=lambda x: list(x.values())[0], reverse=True)
-        feedback_message += "\n\nFiller Words details: \n" + "Your most used filler words are: \n"
+        feedback_message += "Filler Words details: \n" + "Your most used filler words are: \n"
         for i in range(min(5, len(filler_words_detected))):
             item = list(filler_words_detected[i].items())[0]
             feedback_message += "\t" + str(i+1) + ". "+ "'" + item[0] + "'" + " used " + str(item[1]) + " times\n"
@@ -264,25 +264,35 @@ def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detect
 
         feedback_message += "\nI think it would be wonderful if we could reduce the usage of these words as if would create a sense of uncomforatability for certain people in the audience! It wont hurt to come clean every once in a while...Will it now?! :P\n\n"
 
+
     feedback_message += "_" * 100
 
     return feedback_message
 
 
+def stats_for_nerds(audio_filename, audio_file_directory):
+    print("\nStats for Nerds :P\n")
+    mysp.mysptotal(audio_filename, audio_file_directory)
+    print("_" * 100, end="\n\n")
+    print(" * number_ of_syllables\t Number of syllables spoken during your speech")
+    print(" * number_of_pauses\t Number of pauses during your speech")
+    print(" * rate_of_speech\t Number of syllables per second during entire speech")
+    print(" * articulation_rate\t Number of syllables per second for the speaking duration (doesnt consider the pauses)")
+    print(" * speaking_duration\t Number of seconds spoken (doesnt consider the pauses)")
+    print(" * original_duration\t Total speech duration in seconds")
+    print(" * balance\t\t Ratio between speaking duration and total speaking duration")
+    print(" * f0_mean\t\t Fundamental frequency distribution mean")
+    print(" * f0_std\t\t Fundamental frequency distribution Standard Deviation")
+    print(" * f0_median\t\t Fundamental frequency distribution median")
+    print(" * f0_min\t\t Global minimum of fundamental frequency distribution")
+    print(" * f0_max\t\t Global maximum of fundamental frequency distribution")
+    print(" * f0_quantile25\t Global 25th quantile of fundamental frequency distribution")
+    print(" * f0_quan75\t\t Global 75th quantile of fundamental frequency distribution")
+    print()
+    print("_" * 100)
+    print("\n\n")
+
+
 feedback_report = generateFeeback(tone_feedback, filler_words_detected, profanity_words_detected)
 print(feedback_report)
-
-
-
-    
-
-
-
-
-
-        
-
-
-        
-
-
+stats_for_nerds("temp_audio", ".")
