@@ -6,9 +6,8 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 import matplotlib.pyplot as plt
 import docx
 import sys
+import re
 mysp=__import__("my-voice-analysis")
-
-sys.stdout = open("stats_for_nerds.txt", "w")
 
 debug = False
 OUTPUT_FILE_PATH = "speechReport.docx"
@@ -274,33 +273,38 @@ def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detect
             item = list(profanity_words_detected[i].items())[0]
             document.add_paragraph(f'{item[0]} used {item[1]} times.', style='List Bullet')
 
+    stats_for_nerds_table = get_stats_for_nerds("temp_audio", ".")
+
+    table = document.add_table(rows=0, cols=2)
+    for key, value in stats_for_nerds_table:
+        cells = table.add_row().cells
+        cells[0].text = key
+        cells[1].text = value
+
     document.save(OUTPUT_FILE_PATH)
     return OUTPUT_FILE_PATH
 
 
-def stats_for_nerds(audio_filename, audio_file_directory):
-    print("\nStats for Nerds :P\n")
+def get_stats_for_nerds(audio_filename, audio_file_directory):
+    # print("\nStats for Nerds :P\n")
+    sys.stdout = open("stats_for_nerds.txt", "w")
     mysp.mysptotal(audio_filename, audio_file_directory)
-    print("_" * 100, end="\n\n")
-    print(" * number_ of_syllables\t Number of syllables spoken during your speech")
-    print(" * number_of_pauses\t Number of pauses during your speech")
-    print(" * rate_of_speech\t Number of syllables per second during entire speech")
-    print(" * articulation_rate\t Number of syllables per second for the speaking duration (doesnt consider the pauses)")
-    print(" * speaking_duration\t Number of seconds spoken (doesnt consider the pauses)")
-    print(" * original_duration\t Total speech duration in seconds")
-    print(" * balance\t\t Ratio between speaking duration and total speaking duration")
-    print(" * f0_mean\t\t Fundamental frequency distribution mean")
-    print(" * f0_std\t\t Fundamental frequency distribution Standard Deviation")
-    print(" * f0_median\t\t Fundamental frequency distribution median")
-    print(" * f0_min\t\t Global minimum of fundamental frequency distribution")
-    print(" * f0_max\t\t Global maximum of fundamental frequency distribution")
-    print(" * f0_quantile25\t Global 25th quantile of fundamental frequency distribution")
-    print(" * f0_quan75\t\t Global 75th quantile of fundamental frequency distribution")
-    print()
-    print("_" * 100)
-    print("\n\n")
+    sys.stdout = sys.__stdout__
+    stats_file = open("stats_for_nerds.txt", "r")
+    stats = stats_file.read().splitlines()[2:]
+    legend_titles = ['No. of syllables in your speech', 'No. of pauses in your speech', 
+                     'Average syllables per second', 'Average syllables per second (pause time excluded)',
+                     'Speech duration in seconds (pause time excluded)', 'Speech duration in seconds',
+                     'Ratio of speaking and total duration', 'Fundamental frequency distribution mean',
+                     'Fundamental frequency distribution std', 'Fundamental frequency distribution median',
+                     'Global min. of Fundamental frequency distribution', 'Global max. of Fundamental frequency distribution', 
+                     'Global 25th percentile of FFD', 'Global 75th percentile of FFD']
+
+    for index in range(len(legend_titles)):
+        stats[index][0] = legend_titles[0]
+    return stats
 
 
 feedback_report = generateFeeback(tone_feedback, filler_words_detected, profanity_words_detected)
 # print(feedback_report)
-stats_for_nerds("temp_audio", ".")
+# stats_for_nerds("temp_audio", ".")
