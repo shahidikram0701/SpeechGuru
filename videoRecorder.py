@@ -16,13 +16,13 @@ class VideoRecorder():
     "Video class based on openCV"
     def __init__(self, name="temp_video.avi", fourcc="MJPG", sizex=640, sizey=480, camindex=0, fps=30):
         self.open = True
-        self.device_index = camindex
-        self.fps = fps                  # fps should be the minimum constant rate at which the camera can
+        self.device_index = camindex                 # fps should be the minimum constant rate at which the camera can
         self.fourcc = fourcc            # capture images (with no decrease in speed over time; testing is required)
         self.frameSize = (sizex, sizey) # video formats and sizes also depend and vary according to the camera used
         self.video_filename = name
         self.video_cap = cv2.VideoCapture(self.device_index)
         self.video_writer = cv2.VideoWriter_fourcc(*self.fourcc)
+        self.fps = self.video_cap.get(cv2.CAP_PROP_FPS)
         self.video_out = cv2.VideoWriter(self.video_filename, self.video_writer, self.fps, self.frameSize)
         self.frame_counts = 1
         self.start_time = time.time()
@@ -131,6 +131,8 @@ def stop_AVrecording(filename="test"):
     frame_counts = video_thread.frame_counts
     elapsed_time = time.time() - video_thread.start_time
     recorded_fps = frame_counts / elapsed_time
+    with open("FPS.txt", "w") as f:
+        f.write(str(recorded_fps))
     print("total frames " + str(frame_counts))
     print("elapsed time " + str(elapsed_time))
     print("recorded fps " + str(recorded_fps))
