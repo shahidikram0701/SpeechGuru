@@ -34,11 +34,13 @@ def detectAndTrackLargestFace():
     global move_message_y
     global should_move
 
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('output.avi', fourcc, 30.0, (320,240))
 
     #Open the first webcame device
-    capture = cv2.VideoCapture(0)
+    capture = cv2.VideoCapture("temp_video.avi")
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('output.avi', fourcc, capture.get(cv2.CAP_PROP_FPS), (OUTPUT_SIZE_WIDTH, OUTPUT_SIZE_HEIGHT))
+
 
     #Create two opencv named windows
     cv2.namedWindow("base-image", cv2.WINDOW_AUTOSIZE)
@@ -69,6 +71,7 @@ def detectAndTrackLargestFace():
             if(rc):
                 #Resize the image to 320x240
                 baseImage = cv2.resize( fullSizeBaseImage, ( 320, 240))
+                # baseImage = fullSizeBaseImage
 
 
                 #Check if a key was pressed and if it was Q, then destroy all
@@ -246,6 +249,9 @@ def detectAndTrackLargestFace():
                 cv2.waitKey(15)
 
             else:
+                print("hereee!")
+                capture.release()
+                out.release()
                 break
 
 
@@ -262,5 +268,6 @@ if __name__ == '__main__':
     start_time = time.time()
     detectAndTrackLargestFace()
     print("--- %s seconds ---" % (time.time() - start_time))
+
     cv2.destroyAllWindows()
     exit(0)
