@@ -5,10 +5,13 @@ from collections import defaultdict
 from nltk.tokenize import word_tokenize, sent_tokenize
 import matplotlib.pyplot as plt
 import docx
+import sys
 mysp=__import__("my-voice-analysis")
 
+sys.stdout = open("stats_for_nerds.txt", "w")
+
 debug = False
-OUTPUT_FILE_PATH = "file_location/file_name.docx"
+OUTPUT_FILE_PATH = "speechReport.docx"
 
 def debug_print(*args):
     if(debug):
@@ -299,5 +302,5 @@ def stats_for_nerds(audio_filename, audio_file_directory):
 
 
 feedback_report = generateFeeback(tone_feedback, filler_words_detected, profanity_words_detected)
-print(feedback_report)
+# print(feedback_report)
 stats_for_nerds("temp_audio", ".")
