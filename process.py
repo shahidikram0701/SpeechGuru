@@ -292,6 +292,8 @@ def get_stats_for_nerds(audio_filename, audio_file_directory):
     sys.stdout = sys.__stdout__
     stats_file = open("stats_for_nerds.txt", "r")
     stats = stats_file.read().splitlines()[2:]
+    for i in range(len(stats)):
+        stats[i] = re.split('\s{2,}', stats[i])
     legend_titles = ['No. of syllables in your speech', 'No. of pauses in your speech', 
                      'Average syllables per second', 'Average syllables per second (pause time excluded)',
                      'Speech duration in seconds (pause time excluded)', 'Speech duration in seconds',
@@ -301,7 +303,7 @@ def get_stats_for_nerds(audio_filename, audio_file_directory):
                      'Global 25th percentile of FFD', 'Global 75th percentile of FFD']
 
     for index in range(len(legend_titles)):
-        stats[index][0] = legend_titles[0]
+        stats[index][0] = legend_titles[index]
     return stats
 
 
