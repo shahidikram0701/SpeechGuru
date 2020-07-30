@@ -4,9 +4,11 @@ import time
 from collections import defaultdict
 from nltk.tokenize import word_tokenize, sent_tokenize
 import matplotlib.pyplot as plt
+import docx
 mysp=__import__("my-voice-analysis")
 
 debug = False
+OUTPUT_FILE_PATH = "file_location/file_name.docx"
 
 def debug_print(*args):
     if(debug):
@@ -206,68 +208,71 @@ debug_print("profanity_words_detected: ", profanity_words_detected)
 
 
 def generateFeeback(tone_feedback, filler_words_detected, profanity_words_detected):
+    document = docx.Document()
     global word_counts_text
-    feedback_message = "_" * 100
-    feedback_message += "\n\n A detailed report I could come up with listening to you speak! Hope I can be of any help :) \n\n"
-    feedback_message += "Lets start with analysis of the tone with which you were speaking!\n\n"
+    document.add_heading("Speech Report", 0)
+    document.add_paragraph("A detailed report I could come up with while listening to you speak! Hope it could be of some help.")
+    # document.add_heading("Analysis of your tone of speech", 2)
     tone_feedback_message = {
         "paras": {
             -1: "It appears that the deliberate long pauses between the different paragraphs could be something we could improve upon.",
             0: "Spot on with the deliberate long pauses between the different paragraphs.",
-            1: "Oopsie, Seems like there were quite a few extra long pauses you had right there. Maybe we could improve upon exerting those long pauses as approproate, and not overdoing it. :)"
+            1: "Seems like there were quite a few extra long pauses you had right there. Maybe we could improve upon exerting those long pauses as approproate, and not overdoing it. :)"
         },
         "sentences": {
-            -1: "Oops, May be we hurried up a bit there. Felt like some sentences couldn't be distiguished from the other. If we could work upon those tiny little pauses to be able to differentiate sentences, may be the audience could connect better. You know what I am saying yeah?",
-            0: "Perfecto. Seems like every sentence you delivered was crisp and clear. Way to go!",
-            1: "Ouch seems like we had an un-necessary pause mid-sentence in some places. Lets work on delivering each sentence, clearly and confidently without breaks!"
+            -1: "We may have hurried up a bit there. Felt like some sentences couldn't be distinguished from the other. If we could work upon those tiny little pauses to be able to differentiate sentences, may be the audience could connect better.",
+            0: "Seems like every sentence you delivered was crisp and clear. Way to go!",
+            1: "We might have had a few unnecessary pauses mid-sentence in some places. Let's work on delivering each sentence, clearly and confidently without breaks!"
         },
         "questions": {
             -1: "Did we miss a question out there. Seems like it didnt sound like one. Maybe if we could get the right tone to stimulate a train of thoughts in the audience, to make them curious for an answer, it would be more engaging. Don't you think?", 
-            0: "Aha! Bravo. Every question you put out there, piqued my curiosity to wanting to know the answer right away. Well done! Lets keep the tone rolling!",
-            1: "Did we just end up making something that not a queston, sound like one and leave the audience confused? Let's work on it! We could do better. Can't we?"
+            0: "Every question you put out there was well said. Good job! Lets keep the tone rolling!",
+            1: "Did we just end up making something that's not a queston, sound like one and leave the audience confused? Let's work on it! We could do better."
         },
         "exclamation": {
-            -1: "Aye! Where's that excitement hiding mate. Bring it out. Seems like we need to go Hurraayy!!!! a bit more. The secret to getting a listener excited and wanting for more is the energy that you radiate. Lets get the enrgy up!",
-            0: "Wow! That was terrific! You nailed all the exlamations with all the energy you got! Good job buddy! Way to go!",
+            -1: "Seems like there is a bit of excitement lacking. Bring it out. Seems like we need to go Hurraayy!!!! a bit more. The secret to getting a listener excited and wanting for more is the energy that you radiate. Let's get the energy up!",
+            0: "You nailed all the exclamations with all the energy you got! Way to go!",
             1: "Ooh! That was a high energy exciting talk.",
         },
         "commas": {
             -1: "We could probably work on those soft pauses during a sentence.",
-            0: "That right there was perfection. The soft pauses during the sentences capturing the attention of the audience done graciously. Job Well done!!",
-            1: "Aah, Seemed like we had one too many soft pauses in a sentence right there. Let us work on getting them right! What say?" 
+            0: "The soft pauses during the sentences capturing the attention of the audience done graciously. Job Well done!!",
+            1: "Seemed like we had one too many soft pauses in a sentence right there. Let us work on getting them right!" 
         }
     }
-    feedback_message += "\t1. "+ tone_feedback_message["paras"][tone_feedback["paras"]] + "\n\t2. " + tone_feedback_message["sentences"][tone_feedback["sentences"]] + "\n\t3. " + tone_feedback_message["questions"][tone_feedback["questions"]] + "\n\t4. " + tone_feedback_message["exclamation"][tone_feedback["exclamation"]] + "\n\t5. " + tone_feedback_message["commas"][tone_feedback["commas"]] + "\n\n"
+
+    document.add_paragraph(tone_feedback_message["paras"][tone_feedback["paras"]], style='List Bullet')
+    document.add_paragraph(tone_feedback_message["sentences"][tone_feedback["sentences"]], style='List Bullet')
+    document.add_paragraph(tone_feedback_message["questions"][tone_feedback["questions"]], style='List Bullet')
+    document.add_paragraph(tone_feedback_message["exclamation"][tone_feedback["exclamation"]], style='List Bullet')
+    document.add_paragraph(tone_feedback_message["commas"][tone_feedback["commas"]], style='List Bullet')
+
 
     if(len(filler_words_detected) > 0):
         filler_words_detected.sort(key=lambda x: list(x.values())[0], reverse=True)
-        feedback_message += "Filler Words details: \n" + "Your most used filler words are: \n"
+        document.add_heading("Filler Words details", 2)
+        document.add_paragraph("Your most used filler words are: ")
         for i in range(min(5, len(filler_words_detected))):
             item = list(filler_words_detected[i].items())[0]
-            feedback_message += "\t" + str(i+1) + ". "+ "'" + item[0] + "'" + " used " + str(item[1]) + " times\n"
+            document.add_paragraph(f'{item[0]} used {item[1]} times.', style='List Bullet')
 
         total_words_spoken = sum(list(word_counts_text.values()))
         # total_filler_words_spoken = sum([i for i in list(filler_words_detected[i].values())[0]])
         total_filler_words_spoken = sum(list(map(lambda x: list(x.values())[0], filler_words_detected)))
 
         percentage_filler_words = (total_filler_words_spoken / total_words_spoken) * 100
-
-        feedback_message += "\nOkay we have another interesting insight that might help you. Looks like your speech contains {:.2f}% of filler words! Hope this helps you improve refining your talk :)".format(percentage_filler_words)
+        document.add_paragraph(f"We have another interesting insight that might help you. Looks like your speech contains {round(percentage_filler_words, 2)} of filler words! Hope this helps you improve refining your talk")
 
     if(len(profanity_words_detected) > 0):
-        feedback_message += "\n\nDid you just say that?! :O\n\nLooks like I heard some words there that might well qualify to go behind a beep! Ooopppss!\n"
-        feedback_message += "Words that you might have uttered unconciosly that would probably need a little reconsideration, if appropriate to be used whilst talking to an audience as I could point out would be:\n"
+        document.add_heading("Information about profanity", 2)
+        document.add_paragraph("Words that you might have uttered unconsciously that would probably need a little reconsideration")
         profanity_words_detected.sort(key=lambda x: list(x.values())[0], reverse=True)
         for i in range(len(profanity_words_detected)):
             item = list(profanity_words_detected[i].items())[0]
-            feedback_message += "\t" + str(i+1) + ". " + "'" + item[0] + "'" + " used " + str(item[1]) + " times\n"
+            document.add_paragraph(f'{item[0]} used {item[1]} times.', style='List Bullet')
 
-        feedback_message += "\nI think it would be wonderful if we could reduce the usage of these words as if would create a sense of uncomforatability for certain people in the audience! It wont hurt to come clean every once in a while...Will it now?! :P\n\n"
-
-
-    feedback_message += "_" * 100
-
-    return feedback_message
+    document.save(OUTPUT_FILE_PATH)
+    return OUTPUT_FILE_PATH
 
 
 def stats_for_nerds(audio_filename, audio_file_directory):
